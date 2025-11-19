@@ -42,15 +42,27 @@ deaths:"19,26 vs 22,25"
 ```
 
 **What You Can See**
+
 Global leaderboard - who wins, who has the best KD, who scores most
 Map breakdowns - your best/worst maps, who dominates where
 Gamemode rankings - separate stats for HP, SND, Gunfight, etc.
 Head-to-head - your record against specific players, trends over time
-Personal page - all your stats, recent matches, where you're improving or falling off
+Player profile page - all your stats, recent matches, where you're improving or falling off
+
 Everything's filterable by date range, map, or mode.
-Database Structure
+
+
+Database Structure *work in progress*
 Three tables:
 players - gamertag and an ID
 matches - map, mode, scores, timestamp, whether it's FFA
 match_players - links players to matches with their kills/deaths/score and team number
 That's it. Simple and expandable.
+
+
+tech stack * work in progress
+
+i do dashboard/rank logic in R 
+and data modeling sql database or supabse idk 
+
+you do discord integration part APIs, bots  
