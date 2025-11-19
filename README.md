@@ -1,22 +1,20 @@
 **#Black Ops 7 Private Match Tracker**
-A stat tracking system for our private matches. No fluff, just data.
+A stat tracking system for our private matches.
 What This Does
-Records match results and shows who's actually good at what. Supports everything from 1v1s to chaotic FFA games.
+Records match results and shows who's actually good at what. Supports everything from 1v1s 4v4s 1v2 etc...
 The core loop:
 
 Match ends
 Someone logs the stats (Discord command or screenshot)
 Dashboard updates
-Arguments get settled with numbers
 
 **Who Plays**
 Mario, Kai, Danny, Gio, Jozy, Alan + whoever shows up
-What We Track
+**What We Track**
 Per Match:
-
-Map, gamemode, final score
-Who was on which team
-When it happened
+  Map, gamemode, final score (time on hill, captures, plants, defuses, tbd)
+  Who was on which team
+  When it happened
 
 Per Player:
 
