@@ -1,7 +1,7 @@
 from supabase import create_client
 from dotenv import load_dotenv
 import os
-#print("WORKING DIR:", os.getcwd())
+print("WORKING DIR:", os.getcwd())
 
 
 load_dotenv()

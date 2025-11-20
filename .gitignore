@@ -1,4 +1,15 @@
+.Rhistory
 
 .env
 discord-bot/test.py
 discord-bot/.env
+
+# Python REPL / Jupyter history
+.python_history
+ipython_history
+ipython_config.py
+.history
+__pycache__/
+*.__pycache__
+.DS_Store
+Thumbs.db
