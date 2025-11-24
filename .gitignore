@@ -1,15 +1,23 @@
-.Rhistory
+\# Environment & virtual envs
+**/.env
+.env.local
+.venv/
+venv/
 
-.env
-discord-bot/test.py
-discord-bot/.env
+# Python cache
+**/__pycache__/
+*.pyc
+discordbot_dev/.env
+discordbot_dev/env.example
+discordbot_dev/.venv/
 
-# Python REPL / Jupyter history
-.python_history
-ipython_history
-ipython_config.py
-.history
-__pycache__/
-*.__pycache__
-.DS_Store
-Thumbs.db
+# Discord dev artifacts
+discordbot_dev/.env
+discordbot_dev/.venv/
+discordbot_dev/.mypy_cache/
+
+# R / Shiny
+.RData
+.Ruserdata
+.Rproj.user/
+analytics_dev/rsconnect/

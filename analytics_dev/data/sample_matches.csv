@@ -1,0 +1,5 @@
+entry_id,by_who,map,mode,guild_score,jsoc_score,guild_player1_name,guild_player2_name,guild_player3_name,guild_player4_name,jsoc_player1_name,jsoc_player2_name,jsoc_player3_name,jsoc_player4_name
+1,Mario,RAID,HP,250,189,Mario,Kai,Danny,Gio,Jozy,Alan,Guest1,Guest2
+2,Kai,CORTEX,SND,6,4,Kai,Alan,,,Mario,Jozy,,
+3,Danny,BLACKHEART,GF,10,8,Danny,Gio,,,Mario,Kai,,
+
