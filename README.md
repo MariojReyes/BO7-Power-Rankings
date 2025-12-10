@@ -5,7 +5,7 @@ Records match results and shows who's actually good at what. Supports everything
 The core loop:
 
 Match ends
-Someone logs the stats (Discord command or screenshot)
+Someone logs the stats (/logmatch command on discord)
 Dashboard updates
 
 **Who Plays**
@@ -26,20 +26,7 @@ Hardpoint, Search & Destroy, Gunfight, TDM, Free-For-All
 **Current Map Pool:**
 Blackheart, Cortex, Raid, Hijacked
 
-How to Log a Match
-Discord slash command:
-```
-/match add 
-map:Hijacked 
-mode:Hardpoint 
-team1:"Mario,Gio" 
-team2:"Kai,Danny" 
-score:250-243 
-kills:"34,22 vs 28,31"
-deaths:"19,26 vs 22,25"
-```
-
-**What You Can See**
+**Future Features**
 
 Global leaderboard - who wins, who has the best KD, who scores most
 Map breakdowns - your best/worst maps, who dominates where
@@ -48,19 +35,4 @@ Head-to-head - your record against specific players, trends over time
 Player profile page - all your stats, recent matches, where you're improving or falling off
 
 Everything's filterable by date range, map, or mode.
-
-
-Database Structure *work in progress*
-Three tables:
-players - gamertag and an ID
-matches - map, mode, scores, timestamp, whether it's FFA
-match_players - links players to matches with their kills/deaths/score and team number
-That's it. Simple and expandable.
-
-
-tech stack * work in progress
-
-i do dashboard/rank logic in R 
-and data modeling sql database or supabse idk 
-
-you do discord integration part APIs, bots  
+  
