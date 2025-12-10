@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from bot_dev.roster import Player, ROSTER
+from discordbot_dev.roster import Player, ROSTER
 
 
 ROSTER_LOOKUP: Dict[int, Player] = {player.id: player for player in ROSTER}

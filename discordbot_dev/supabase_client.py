@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 from supabase import Client, create_client
 
-from bot_dev.config import Settings
+from discordbot_dev.config import Settings
 
 
 @dataclass

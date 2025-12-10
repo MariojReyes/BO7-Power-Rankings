@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import discord
 
-from bot_dev.config import Settings
-from bot_dev.constants import MAPS, MODES
-from bot_dev.match_flow import MatchState, ROSTER, ROSTER_LOOKUP
-from bot_dev.supabase_client import SupabaseWriter
+from discordbot_dev.config import Settings
+from discordbot_dev.constants import MAPS, MODES
+from discordbot_dev.match_flow import MatchState, ROSTER, ROSTER_LOOKUP
+from discordbot_dev.supabase_client import SupabaseWriter
 
 
 class MatchLoggerView(discord.ui.View):

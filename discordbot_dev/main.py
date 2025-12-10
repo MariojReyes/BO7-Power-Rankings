@@ -4,14 +4,25 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
+from pathlib import Path
 
 import discord
 from discord.ext import commands
 
-from bot_dev.config import Settings, load_settings
-from bot_dev.match_flow import MatchState
-from bot_dev.supabase_client import SupabaseWriter
-from bot_dev.views import MatchLoggerView
+# Handle both direct execution and module execution
+if __name__ == "__main__" and __package__ is None:
+    # Add parent directory to path when running directly
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from discordbot_dev.config import Settings, load_settings
+    from discordbot_dev.match_flow import MatchState
+    from discordbot_dev.supabase_client import SupabaseWriter
+    from discordbot_dev.views import MatchLoggerView
+else:
+    from discordbot_dev.config import Settings, load_settings
+    from discordbot_dev.match_flow import MatchState
+    from discordbot_dev.supabase_client import SupabaseWriter
+    from discordbot_dev.views import MatchLoggerView
 
 
 logging.basicConfig(level=logging.INFO)
