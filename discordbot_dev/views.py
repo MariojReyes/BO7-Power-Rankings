@@ -20,25 +20,10 @@ class MatchLoggerView(discord.ui.View):
 
         self.mode_select = ModeSelect(self)
         self.map_select = MapSelect(self)
-        self.guild_size_select = TeamSizeSelect(self, team="guild")
         self.guild_player_select = PlayerSelect(self, team="guild")
-        self.jsoc_size_select = TeamSizeSelect(self, team="jsoc")
         self.jsoc_player_select = PlayerSelect(self, team="jsoc")
-        self.ffa_size_select = FFASizeSelect(self)
         self.ffa_player_select = FFAPlayerSelect(self)
-        self.add_item(self.mode_select)
-        self.add_item(self.map_select)
-        self.add_item(self.guild_size_select)
-        self.add_item(self.guild_player_select)
-        self.add_item(self.jsoc_size_select)
-        self.add_item(self.jsoc_player_select)
-        self.add_item(self.ffa_size_select)
-        self.add_item(self.ffa_player_select)
-        self.add_item(OpenScoreModalButton(self))
-        self.add_item(SubmitButton(self))
-        self.add_item(CancelButton(self))
-
-        self._apply_mode_rules(initial=True)
+        self._rebuild_items()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.owner_id:
@@ -81,25 +66,28 @@ class MatchLoggerView(discord.ui.View):
         return embed
 
     async def refresh(self, interaction: discord.Interaction) -> None:
-        self._apply_mode_rules()
+        self._rebuild_items()
         await interaction.response.edit_message(embed=self.build_embed(), view=self)
 
-    def _apply_mode_rules(self, initial: bool = False) -> None:
-        is_ffa = self.state.is_free_for_all()
-        # Toggle team-based controls
-        for control in (self.guild_size_select, self.guild_player_select, self.jsoc_size_select, self.jsoc_player_select):
-            control.disabled = is_ffa
-        self.ffa_size_select.disabled = not is_ffa
-        self.ffa_player_select.disabled = not is_ffa
+    def _rebuild_items(self) -> None:
+        """Rebuild the action rows to stay within Discord's 5-row limit."""
+        self.clear_items()
+        # Core selectors
+        self.add_item(self.mode_select)
+        self.add_item(self.map_select)
 
-        if initial:
-            # ensure defaults
-            self.guild_size_select.disabled = True
-            self.jsoc_size_select.disabled = True
-            self.guild_player_select.disabled = True
-            self.jsoc_player_select.disabled = True
-            self.ffa_size_select.disabled = True
-            self.ffa_player_select.disabled = True
+        if self.state.is_free_for_all():
+            # Only show FFA roster picker
+            self.add_item(self.ffa_player_select)
+        else:
+            # Show team roster pickers
+            self.add_item(self.guild_player_select)
+            self.add_item(self.jsoc_player_select)
+
+        # Buttons share the final row
+        self.add_item(OpenScoreModalButton(self))
+        self.add_item(SubmitButton(self))
+        self.add_item(CancelButton(self))
 
     def _mode_label(self) -> str | None:
         return next((mode.label for mode in MODES if mode.code == self.state.mode_code), None)
@@ -113,19 +101,17 @@ class MatchLoggerView(discord.ui.View):
         if not base_ready:
             return False
         if self.state.is_free_for_all():
-            return bool(self.state.ffa_size and len(self.state.ffa_players) == self.state.ffa_size)
+            return len(self.state.ffa_players) >= 2
         return bool(
-            self.state.guild_size
-            and len(self.state.guild_players) == self.state.guild_size
-            and self.state.jsoc_size
-            and len(self.state.jsoc_players) == self.state.jsoc_size
+            len(self.state.guild_players) > 0
+            and len(self.state.jsoc_players) > 0
         )
 
     async def submit(self, interaction: discord.Interaction) -> None:
         if not self.selections_complete():
             await interaction.response.send_message("Selections incomplete. Fill out every section before submitting.", ephemeral=True)
             return
-        payload = self.state.to_supabase_payload()
+        payload = self.state.to_supabase_payload(writer=self.writer)
         result = self.writer.insert_match(payload)
         await interaction.response.send_message(f"Match recorded! Dry run: {result.get('dry_run', False)}", ephemeral=True)
 
@@ -136,7 +122,6 @@ class ModeSelect(discord.ui.Select):
             discord.SelectOption(label=mode.label, value=mode.code) for mode in MODES
         ]
         super().__init__(placeholder="Choose Game Mode", min_values=1, max_values=1, options=options)
-        self.view = view
 
     async def callback(self, interaction: discord.Interaction) -> None:
         self.view.state.mode_code = self.values[0]
@@ -151,31 +136,9 @@ class MapSelect(discord.ui.Select):
     def __init__(self, view: MatchLoggerView):
         options = [discord.SelectOption(label=m.label, value=m.code) for m in MAPS]
         super().__init__(placeholder="Choose Map", min_values=1, max_values=1, options=options)
-        self.view = view
 
     async def callback(self, interaction: discord.Interaction) -> None:
         self.view.state.map_code = self.values[0]
-        await self.view.refresh(interaction)
-
-
-class TeamSizeSelect(discord.ui.Select):
-    def __init__(self, view: MatchLoggerView, *, team: str):
-        options = [discord.SelectOption(label=f"{i} Players", value=str(i)) for i in range(1, 5)]
-        placeholder = f"How many players on {team.capitalize()}?"
-        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, disabled=True)
-        self.view = view
-        self.team = team
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        size = int(self.values[0])
-        if self.team == "guild":
-            self.view.state.guild_size = size
-            self.view.guild_player_select.set_limit(size)
-            self.view.guild_player_select.disabled = False
-        else:
-            self.view.state.jsoc_size = size
-            self.view.jsoc_player_select.set_limit(size)
-            self.view.jsoc_player_select.disabled = False
         await self.view.refresh(interaction)
 
 
@@ -190,14 +153,8 @@ class PlayerSelect(discord.ui.Select):
             min_values=0,
             max_values=4,
             options=options,
-            disabled=True,
         )
-        self.view = view
         self.team = team
-
-    def set_limit(self, limit: int) -> None:
-        self.min_values = limit
-        self.max_values = limit
 
     async def callback(self, interaction: discord.Interaction) -> None:
         picks = [int(value) for value in self.values]
@@ -212,20 +169,6 @@ class PlayerSelect(discord.ui.Select):
         await self.view.refresh(interaction)
 
 
-class FFASizeSelect(discord.ui.Select):
-    def __init__(self, view: MatchLoggerView):
-        options = [discord.SelectOption(label=f"{i} Players", value=str(i)) for i in range(2, 9)]
-        super().__init__(placeholder="How many FFA players?", min_values=1, max_values=1, options=options, disabled=True)
-        self.view = view
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        size = int(self.values[0])
-        self.view.state.ffa_size = size
-        self.view.ffa_player_select.set_limit(size)
-        self.view.ffa_player_select.disabled = False
-        await self.view.refresh(interaction)
-
-
 class FFAPlayerSelect(discord.ui.Select):
     def __init__(self, view: MatchLoggerView):
         options = [
@@ -234,22 +177,13 @@ class FFAPlayerSelect(discord.ui.Select):
         ]
         super().__init__(
             placeholder="FFA Roster",
-            min_values=0,
+            min_values=2,
             max_values=8,
             options=options,
-            disabled=True,
         )
-        self.view = view
-
-    def set_limit(self, limit: int) -> None:
-        self.min_values = limit
-        self.max_values = limit
 
     async def callback(self, interaction: discord.Interaction) -> None:
         picks = [int(value) for value in self.values]
-        if len(picks) != (self.view.state.ffa_size or 0):
-            await interaction.response.send_message("Select the exact number of FFA players.", ephemeral=True)
-            return
         self.view.state.ffa_players = picks
         await self.view.refresh(interaction)
 
@@ -289,28 +223,29 @@ class ScoreModal(discord.ui.Modal):
 class OpenScoreModalButton(discord.ui.Button):
     def __init__(self, view: MatchLoggerView):
         super().__init__(label="Enter Scores", style=discord.ButtonStyle.primary)
-        self.view = view
+        # discord.py sets .view when the button is added; no manual assignment needed
+        self._parent_view = view
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        await interaction.response.send_modal(ScoreModal(self.view))
+        await interaction.response.send_modal(ScoreModal(self._parent_view))
 
 
 class SubmitButton(discord.ui.Button):
     def __init__(self, view: MatchLoggerView):
         super().__init__(label="Submit Match", style=discord.ButtonStyle.success)
-        self.view = view
+        self._parent_view = view
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        await self.view.submit(interaction)
+        await self._parent_view.submit(interaction)
 
 
 class CancelButton(discord.ui.Button):
     def __init__(self, view: MatchLoggerView):
         super().__init__(label="Cancel Session", style=discord.ButtonStyle.danger)
-        self.view = view
+        self._parent_view = view
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        for child in self.view.children:
+        for child in self._parent_view.children:
             child.disabled = True
-        await interaction.response.edit_message(content="Session cancelled.", view=self.view)
+        await interaction.response.edit_message(content="Session cancelled.", view=self._parent_view)
 

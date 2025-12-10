@@ -37,15 +37,34 @@ class MatchState:
         jsoc_names = ", ".join(ROSTER_LOOKUP[p].name for p in self.jsoc_players) or "TBD"
         return f"Guild [{guild_names}] vs JSOC [{jsoc_names}]"
 
-    def to_supabase_payload(self) -> Dict[str, Optional[str]]:
-        """Flatten the current selections into the denormalized table payload."""
-        payload: Dict[str, Optional[str]] = {
+    def to_supabase_payload(self, writer=None) -> Dict[str, Any]:
+        """Flatten the current selections into the denormalized table payload.
+        
+        If writer is provided, looks up map_id and mode_id from the database.
+        Otherwise, returns map and mode as codes (for backward compatibility).
+        """
+        from discordbot_dev.constants import MAPS, MODES
+        
+        # Get the labels for lookup
+        mode_label = next((mode.label for mode in MODES if mode.code == self.mode_code), None)
+        map_label = next((m.label for m in MAPS if m.code == self.map_code), None)
+        
+        payload: Dict[str, Any] = {
             "by_who": self.by_who,
-            "mode": self.mode_code,
-            "map": self.map_code,
             "guild_score": self.guild_score,
             "jsoc_score": self.jsoc_score,
         }
+        
+        # If writer is provided, look up IDs; otherwise use codes
+        if writer:
+            map_id = writer.lookup_map_id(map_label) if map_label else None
+            mode_id = writer.lookup_mode_id(mode_label) if mode_label else None
+            payload["map_id"] = map_id
+            payload["mode_id"] = mode_id
+        else:
+            # Fallback to codes for backward compatibility
+            payload["mode"] = self.mode_code
+            payload["map"] = self.map_code
 
 
         def assign(prefix: str, players: List[int]) -> None:

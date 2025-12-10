@@ -114,6 +114,8 @@ def test_supabase_connection(url: str, key: str, table: str) -> tuple[str, str]:
         return "OK", f"Connected successfully (table exists)"
     except Exception as e:
         error_msg = str(e)
+        print(f"\n   🔍 DEBUG - Full error message: {error_msg}")  # Add this line
+        
         if "JWT" in error_msg or "invalid" in error_msg.lower():
             return "ERROR", f"Authentication failed: Check your SUPABASE_SERVICE_KEY"
         elif "relation" in error_msg.lower() or "does not exist" in error_msg.lower():
